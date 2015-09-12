@@ -16,6 +16,10 @@ if (file.exists(filename)) {
                                          language = "C",
                                          convention = ".C"
   )
+} else {
+  openblas.set.num.threads <- function(x) {
+    return(NULL)
+  }
 }
 
 ################################################################################
