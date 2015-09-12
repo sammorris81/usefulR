@@ -17,3 +17,37 @@ if (file.exists(filename)) {
                                          convention = ".C"
   )
 }
+
+################################################################################
+# Common data transformations
+################################################################################
+transform <- list(
+  logit = function(x, lower = 0, upper = 1) {
+    x <- (x - lower) / (upper - lower)
+    return(log(x / (1 - x)))
+  },
+  inv.logit = function(x, lower = 0, upper = 1) {
+    p <- exp(x) / (1 + exp(x))
+    p <- p * (upper - lower) + lower
+    return(p)
+  },
+  probit = function(x, lower = 0, upper = 1) {
+    x <- (x - lower) / (upper - lower)
+    return(qnorm(x))
+  },
+  inv.probit = function(x, lower = 0, upper = 1) {
+    p <- pnorm(x)
+    p <- p * (upper - lower) + lower
+    return(p)
+  },
+  log = function(x) log(x),
+  exp = function(x) exp(x),
+  copula = function(dens) {
+    this.dens <- paste("p", dens, sep = "")
+    function(x, ...) qnorm(do.call(this.dens, args = list(x, ...)))
+  },
+  inv.copula = function(dens) {
+    this.dens <- paste("q", dens, sep = "")
+    function(x, ...) do.call(this.dens, args = list(pnorm(x), ...))
+  }
+)
