@@ -3,6 +3,8 @@ if (Sys.info()["sysname"] == "Linux") {
   shlib.ext <- ".so"
 } else if (Sys.info()["sysname"] == "Darwin") {
   shlib.ext <- ".dylib"
+} else if (Sys.info()["sysname"] == "Windows") {
+  shlib.ext <- ".dll"
 }
 
 filename <- paste("/opt/OpenBLAS/lib/libopenblas", shlib.ext, sep = "")
@@ -31,7 +33,7 @@ transform <- list(
     return(log(x / (1 - x)))
   },
   inv.logit = function(x, lower = 0, upper = 1) {
-    p <- exp(x) / (1 + exp(x))
+    p <- 1 / (1 + exp(-x))
     p <- p * (upper - lower) + lower
     return(p)
   },
