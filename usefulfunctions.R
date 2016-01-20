@@ -78,3 +78,27 @@ checkStrict <- function(f, silent=FALSE) {
   
   !any(found)
 }
+
+################################################################################
+# cross-validation setup
+################################################################################
+get.cv.test <- function(n, nfolds) {
+  ## Returns a randomly selected set of cross-validation indices based on 
+  ## how many folds are selected.
+  cat("Note: If you want to replicate cross-validation results, be sure to \n")
+  cat("      set the seed before running get.cv.test.\n")
+  random.cents <- sample(x = 1:n, size = n, replace = F)
+  ntest <- ceiling(0.2 * n)
+  cv.idx <- vector(mode = "list", length = nfolds)
+  for (i in 1:nfolds) {
+    start <- (i - 1) * ntest + 1
+    if (i < nfolds) {
+      end <- i * ntest
+    } else {
+      end <- n  # in case the last cv set has fewer sites in it
+    }
+    cv.idx[[i]] <- random.cents[start:end]
+  }
+  
+  return(cv.idx)
+}
