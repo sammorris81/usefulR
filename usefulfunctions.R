@@ -88,7 +88,7 @@ get.cv.test <- function(n, nfolds) {
   cat("Note: If you want to replicate cross-validation results, be sure to \n")
   cat("      set the seed before running get.cv.test.\n")
   random.cents <- sample(x = 1:n, size = n, replace = F)
-  ntest <- ceiling(0.2 * n)
+  ntest <- ceiling(n / nfolds)
   cv.idx <- vector(mode = "list", length = nfolds)
   for (i in 1:nfolds) {
     start <- (i - 1) * ntest + 1
