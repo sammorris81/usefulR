@@ -97,7 +97,7 @@ get.cv.test <- function(n, nfolds) {
     } else {
       end <- n  # in case the last cv set has fewer sites in it
     }
-    cv.idx[[i]] <- random.cents[start:end]
+    cv.idx[[i]] <- sort(random.cents[start:end])
   }
   
   return(cv.idx)
