@@ -82,7 +82,7 @@ checkStrict <- function(f, silent=FALSE) {
 ################################################################################
 # cross-validation setup
 ################################################################################
-get.cv.test <- function(n, nfolds) {
+get.cv.test.srs <- function(n, nfolds) {
   ## Returns a randomly selected set of cross-validation indices based on 
   ## how many folds are selected.
   cat("Note: If you want to replicate cross-validation results, be sure to \n")
@@ -96,6 +96,58 @@ get.cv.test <- function(n, nfolds) {
       end <- i * ntest
     } else {
       end <- n  # in case the last cv set has fewer sites in it
+    }
+    cv.idx[[i]] <- sort(random.cents[start:end])
+  }
+  
+  return(cv.idx)
+}
+
+################################################################################
+# cross-validation, stratified by site
+################################################################################
+get.cv.test.strat <- function(data, nfolds, idx = NULL) {
+  ## Returns a randomly selected set of cross-validation indices based on 
+  ## how many folds are selected.
+  ## data: matrix of the observations
+  ## nfolds: how many folds you want
+  ## idx: if you want to stratify over rows or colums
+  ## returns cv.idx: a list (length = nfolds) of matrices the same size as data
+  cat("Note: If you want to replicate cross-validation results, be sure to \n")
+  cat("      set the seed before running get.cv.test. \n")
+  
+  samples <- data
+  if (idx == 1) {
+    n <- ncol(data)
+    cat("Stratifying the cross-validation by rows. \n")
+    for (i in 1:nrow(data)) {
+      samples[i, ] <- sample(x = 1:n, size = n, replace = FALSE)
+    }
+  } else if (idx == 2) {
+    n <- nrow(data)
+    cat("Stratifying the cross-validation by column. \n")
+    for (j in 1:ncol(data)) {
+      samples[, j] <- sample(x = 1:n, size = n, replace = FALSE)
+    }
+  } 
+  
+  ntest <- ceiling(n / nfolds)
+  cv.idx <- vector(mode = "list", length = nfolds)
+  for (i in 1:nfolds) {
+    start <- (i - 1) * ntest + 1
+    if (i < nfolds) {
+      end <- i * ntest
+    } else {
+      end <- n  # in case the last cv set has fewer sites in it
+    }
+    
+    # This should return a matrix of TF
+    cv.temp <- data
+    cv.temp[] <- FALSE
+    if (idx == 1) {
+      for (i in 1:nrow(data)) {
+        cv.temp[i, ] <- 
+      }
     }
     cv.idx[[i]] <- sort(random.cents[start:end])
   }
