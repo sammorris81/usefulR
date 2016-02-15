@@ -133,23 +133,26 @@ get.cv.test.strat <- function(data, nfolds, idx = NULL) {
   
   ntest <- ceiling(n / nfolds)
   cv.idx <- vector(mode = "list", length = nfolds)
-  for (i in 1:nfolds) {
-    start <- (i - 1) * ntest + 1
-    if (i < nfolds) {
-      end <- i * ntest
+  for (fold in 1:nfolds) {
+    start <- (fold - 1) * ntest + 1
+    if (fold < nfolds) {
+      end <- fold * ntest
     } else {
       end <- n  # in case the last cv set has fewer sites in it
     }
     
     # This should return a matrix of TF
-    cv.temp <- data
-    cv.temp[] <- FALSE
+    cv.temp <- matrix(FALSE, nrow(data), ncol(data))
     if (idx == 1) {
       for (i in 1:nrow(data)) {
-        cv.temp[i, ] <- 
+        cv.temp[i, samples[i, start:end]] <- TRUE
+      }
+    } else if (idx == 2) {
+      for (j in 1:ncol(data)) {
+        cv.temp[samples[start:end, j], j] <- TRUE
       }
     }
-    cv.idx[[i]] <- sort(random.cents[start:end])
+    cv.idx[[fold]] <- cv.temp
   }
   
   return(cv.idx)
