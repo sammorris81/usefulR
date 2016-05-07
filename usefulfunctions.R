@@ -24,6 +24,23 @@ if (file.exists(filename)) {
   }
 }
 
+filename <- paste("~/packages/lib/libopenblas", shlib.ext, sep = "")
+
+if (file.exists(filename)) {
+  require(inline)
+  openblas.set.num.threads <- cfunction( signature(ipt="integer"),
+                                         body = 'openblas_set_num_threads(*ipt);',
+                                         otherdefs = c ('extern void openblas_set_num_threads(int);'),
+                                         libargs = c ('-L/opt/OpenBLAS/lib -lopenblas'),
+                                         language = "C",
+                                         convention = ".C"
+  )
+} else {
+  openblas.set.num.threads <- function(x) {
+    return(NULL)
+  }
+}
+
 ################################################################################
 # Common data transformations
 ################################################################################
@@ -64,7 +81,7 @@ checkStrict <- function(f, silent=FALSE) {
   vars <- codetools::findGlobals(f)
   found <- !vapply(vars, exists, logical(1), envir=as.environment(2))
   names <- names(found)[found]
-  
+
   if ((length(names) > 0)) {
     sum.nfncs <- 0
     for (i in 1:length(names)) {
@@ -75,7 +92,7 @@ checkStrict <- function(f, silent=FALSE) {
       return(invisible(FALSE))
     }
   }
-  
+
   !any(found)
 }
 
@@ -129,7 +146,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 # cross-validation setup
 ################################################################################
 get.cv.test.srs <- function(n, nfolds) {
-  ## Returns a randomly selected set of cross-validation indices based on 
+  ## Returns a randomly selected set of cross-validation indices based on
   ## how many folds are selected.
   cat("Note: If you want to replicate cross-validation results, be sure to \n")
   cat("      set the seed before running get.cv.test.\n")
@@ -145,7 +162,7 @@ get.cv.test.srs <- function(n, nfolds) {
     }
     cv.idx[[i]] <- sort(random.cents[start:end])
   }
-  
+
   return(cv.idx)
 }
 
@@ -153,7 +170,7 @@ get.cv.test.srs <- function(n, nfolds) {
 # cross-validation, stratified by site
 ################################################################################
 get.cv.test.strat <- function(data, nfolds, idx = NULL) {
-  ## Returns a randomly selected set of cross-validation indices based on 
+  ## Returns a randomly selected set of cross-validation indices based on
   ## how many folds are selected.
   ## data: matrix of the observations
   ## nfolds: how many folds you want
@@ -161,7 +178,7 @@ get.cv.test.strat <- function(data, nfolds, idx = NULL) {
   ## returns cv.idx: a list (length = nfolds) of matrices the same size as data
   cat("Note: If you want to replicate cross-validation results, be sure to \n")
   cat("      set the seed before running get.cv.test. \n")
-  
+
   samples <- data
   if (idx == 1) {
     n <- ncol(data)
@@ -175,8 +192,8 @@ get.cv.test.strat <- function(data, nfolds, idx = NULL) {
     for (j in 1:ncol(data)) {
       samples[, j] <- sample(x = 1:n, size = n, replace = FALSE)
     }
-  } 
-  
+  }
+
   ntest <- ceiling(n / nfolds)
   cv.idx <- vector(mode = "list", length = nfolds)
   for (fold in 1:nfolds) {
@@ -186,7 +203,7 @@ get.cv.test.strat <- function(data, nfolds, idx = NULL) {
     } else {
       end <- n  # in case the last cv set has fewer sites in it
     }
-    
+
     # This should return a matrix of TF
     cv.temp <- matrix(FALSE, nrow(data), ncol(data))
     if (idx == 1) {
@@ -200,7 +217,7 @@ get.cv.test.strat <- function(data, nfolds, idx = NULL) {
     }
     cv.idx[[fold]] <- cv.temp
   }
-  
+
   return(cv.idx)
 }
 
@@ -216,12 +233,12 @@ get.cv.test.strat <- function(data, nfolds, idx = NULL) {
 #
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
-  
+
   # Make a list from the ... arguments and plotlist
   plots <- c(list(...), plotlist)
-  
+
   numPlots = length(plots)
-  
+
   # If layout is NULL, then use 'cols' to determine layout
   if (is.null(layout)) {
     # Make the panel
@@ -230,20 +247,20 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
                      ncol = cols, nrow = ceiling(numPlots/cols))
   }
-  
+
   if (numPlots==1) {
     print(plots[[1]])
-    
+
   } else {
     # Set up the page
     grid.newpage()
     pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    
+
     # Make each plot, in the correct location
     for (i in 1:numPlots) {
       # Get the i,j matrix positions of the regions that contain this subplot
       matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      
+
       print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
                                       layout.pos.col = matchidx$col))
     }
