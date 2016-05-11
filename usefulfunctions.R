@@ -24,22 +24,22 @@ if (file.exists(filename)) {
   }
 }
 
-filename <- paste("~/packages/lib/libopenblas", shlib.ext, sep = "")
-
-if (file.exists(filename)) {
-  require(inline)
-  openblas.set.num.threads <- cfunction( signature(ipt="integer"),
-                                         body = 'openblas_set_num_threads(*ipt);',
-                                         otherdefs = c ('extern void openblas_set_num_threads(int);'),
-                                         libargs = c ('-L/opt/OpenBLAS/lib -lopenblas'),
-                                         language = "C",
-                                         convention = ".C"
-  )
-} else {
-  openblas.set.num.threads <- function(x) {
-    return(NULL)
-  }
-}
+# filename <- paste("~/packages/lib/libopenblas", shlib.ext, sep = "")
+#
+# if (file.exists(filename)) {
+#   require(inline)
+#   openblas.set.num.threads <- cfunction( signature(ipt="integer"),
+#                                          body = 'openblas_set_num_threads(*ipt);',
+#                                          otherdefs = c ('extern void openblas_set_num_threads(int);'),
+#                                          libargs = c ('-L~/packages/lib -lopenblas'),
+#                                          language = "C",
+#                                          convention = ".C"
+#   )
+# } else {
+#   openblas.set.num.threads <- function(x) {
+#     return(NULL)
+#   }
+# }
 
 ################################################################################
 # Common data transformations
@@ -108,12 +108,12 @@ checkStrict <- function(f, silent=FALSE) {
 #
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
-  
+
   # Make a list from the ... arguments and plotlist
   plots <- c(list(...), plotlist)
-  
+
   numPlots = length(plots)
-  
+
   # If layout is NULL, then use 'cols' to determine layout
   if (is.null(layout)) {
     # Make the panel
@@ -122,20 +122,20 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
                      ncol = cols, nrow = ceiling(numPlots/cols))
   }
-  
+
   if (numPlots==1) {
     print(plots[[1]])
-    
+
   } else {
     # Set up the page
     grid.newpage()
     pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    
+
     # Make each plot, in the correct location
     for (i in 1:numPlots) {
       # Get the i,j matrix positions of the regions that contain this subplot
       matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      
+
       print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
                                       layout.pos.col = matchidx$col))
     }
