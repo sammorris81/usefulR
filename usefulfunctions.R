@@ -1,3 +1,8 @@
+if (!exists("useful.cpp.load")) {
+  sourceCpp(file = "usefulfunctions.cpp")
+  useful.cpp.load <- TRUE
+}
+
 # do not foresee needing to use this on windows.
 if (Sys.info()["sysname"] == "Linux") {
   shlib.ext <- ".so"
@@ -41,9 +46,58 @@ if (file.exists(filename)) {
 #   }
 # }
 
-################################################################################
-# Common data transformations
-################################################################################
+###############################################
+########## Common densities not in R ##########
+###############################################
+rtnorm <- function(mn, sd = 0.25, fudge = 0){
+  upper <- pnorm(1 - fudge, mn, sd)
+  lower <- pnorm(fudge, mn, sd)
+  if (is.matrix(mn)) {
+    U <- matrix(runif(prod(dim(mn)), lower, upper), dim(mn)[1], dim(mn)[2])
+  }
+  if (!is.matrix(mn)) {
+    U <- runif(length(mn), lower, upper)
+  }
+  return(qnorm(U, mn, sd))
+}
+
+dtnorm <- function(y, mn, sd = 0.25, fudge = 0){
+  upper <- pnorm(1 - fudge, mn, sd)
+  lower <- pnorm(fudge, mn, sd)
+  l <- dnorm(y, mn, sd, log = TRUE) - log(upper - lower)
+  return(l)
+}
+
+dlognormal <- function(x, mu, sig){
+  dnorm(log(x), log(mu), sig, log = T) - log(x)
+}
+
+
+###############################################
+############# MH Update for MCMC ##############
+###############################################
+# update candidate standard deviation
+mhUpdate <- function(acc, att, MH, nattempts = 50,
+                     target.min = 0.3, target.max = 0.6,
+                     lower = 0.8, higher = 1.2) {
+  acc.rate     <- acc / att
+  these.update <- att > nattempts
+  these.low    <- (acc.rate < target.min) & these.update
+  these.high   <- (acc.rate > target.max) & these.update
+
+  MH[these.low]  <- MH[these.low] * lower
+  MH[these.high] <- MH[these.high] * higher
+
+  acc[these.update] <- 0
+  att[these.update] <- 0
+
+  results <- list(acc=acc, att=att, MH=MH)
+  return(results)
+}
+
+###############################################
+######### Common data transformations #########
+###############################################
 transform <- list(
   logit = function(x, lower = 0, upper = 1) {
     x <- (x - lower) / (upper - lower)
@@ -142,9 +196,9 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   }
 }
 
-################################################################################
-# cross-validation setup
-################################################################################
+###############################################
+########### cross-validation setup ############
+###############################################
 get.cv.test.srs <- function(n, nfolds) {
   ## Returns a randomly selected set of cross-validation indices based on
   ## how many folds are selected.
@@ -219,50 +273,4 @@ get.cv.test.strat <- function(data, nfolds, idx = NULL) {
   }
 
   return(cv.idx)
-}
-
-# Multiple plot function
-#
-# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
-# - cols:   Number of columns in layout
-# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
-#
-# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
-# then plot 1 will go in the upper left, 2 will go in the upper right, and
-# 3 will go all the way across the bottom.
-#
-multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
-  library(grid)
-
-  # Make a list from the ... arguments and plotlist
-  plots <- c(list(...), plotlist)
-
-  numPlots = length(plots)
-
-  # If layout is NULL, then use 'cols' to determine layout
-  if (is.null(layout)) {
-    # Make the panel
-    # ncol: Number of columns of plots
-    # nrow: Number of rows needed, calculated from # of cols
-    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
-                     ncol = cols, nrow = ceiling(numPlots/cols))
-  }
-
-  if (numPlots==1) {
-    print(plots[[1]])
-
-  } else {
-    # Set up the page
-    grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-
-    # Make each plot, in the correct location
-    for (i in 1:numPlots) {
-      # Get the i,j matrix positions of the regions that contain this subplot
-      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
-    }
-  }
 }
