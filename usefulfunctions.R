@@ -274,3 +274,15 @@ get.cv.test.strat <- function(data, nfolds, idx = NULL) {
 
   return(cv.idx)
 }
+
+get.arr.idx <- function(idx, nrows) {
+  # find the row, col indices from a vector index
+  col <- ceiling(idx / nrows)
+  row <- idx - (col - 1) * nrows
+  return(c(row, col))
+}
+
+get.idx <- function(row, col, nrows) {
+  # find the vector index from the row, col indices
+  return((col - 1) * nrows + row)
+}
